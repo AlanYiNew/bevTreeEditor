@@ -1,0 +1,3 @@
+.same-as-width{
+	height:calc(width);
+}
