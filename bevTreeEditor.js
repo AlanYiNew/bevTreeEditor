@@ -1,5 +1,7 @@
 //Detect resize of an element
 ;(function($){
+	let panel = {};
+
 	//Dot Representation
 	function Dot(pos){
 		this.UI = {}
@@ -37,7 +39,6 @@
 		return this;
 	}
 
-
 	//Node Representation
 	function Node(id,type){
 		let node = this;
@@ -45,19 +46,36 @@
 		this.type = type;
 		this.id = id;
 		
-		this.UI = {};
-		this.UI.pos = {};
-		this.UI.element = $('<div/>').css({'position':'absolute','width':'12%','height':'50px','background-color':'#66ccff'});
-		this.UI.pos.X = 0;
-		this.UI.pos.Y = 0;		
-		
+		this.UI = {};		
+		this.UI.element = $('<div/>').css({'position':'relative','width':'100%','height':'50px','background-color':'#66ccff'});
+
 		this.UI.element.append(new Dot('top').UI.element);
 		this.UI.element.append(new Dot('left').UI.element);
 		this.UI.element.append(new Dot('bot').UI.element);
 		this.UI.element.append(new Dot('right').UI.element);
 
+	}
+
+	//Node container representation
+	function NodeContainer(id,type){
+		this.UI = {}
+		this.UI.element = $('<div/>').css({'width':'10%','position':'absolute','padding':'8px'})
+		this.UI.element.append(new Node(id,'type').UI.element);
+
+		this.UI.pos = {};
+		this.UI.pos.X = 0;
+		this.UI.pos.Y = 0;
+
+		let node = this;
 		this.UI.element[0].onmousedown = function (e) {
 		    e.stopPropagation();
+		    //various setting
+		    $(this).css({'border':'1px #000000 dashed'});
+		    if (panel.currentActivate)
+		    	panel.currentActivate.UI.element.css('border','');
+		    panel.currentActivate = node;
+
+		    //calculate position and set it
 		    node.UI.pos.X = e.clientX - this.offsetLeft;
 		    node.UI.pos.Y = e.clientY - this.offsetTop;
 			node.UI.element.parent()[0].onmousemove = function (e) {
@@ -76,28 +94,37 @@
 		        node.UI.element[0].style.cursor = 'move';
 			};
 		};
-		
+
+		this.UI.element[0].onmouseenter = function(e){
+			this.style.cursor = 'move';
+		}		
+
 		this.UI.element[0].onmouseup = function(e){
 			node.UI.element.parent()[0].onmousemove = null;
 			this.style.cursor = 'default';
 		}
+		return this;
 	}
+
+	
+	panel.UI = {};
+	panel.UI.element = $('<div/>').css({'width':'60%','height':'150%','float':'left'});
 
 	let nodePool = [];
 	$.fn.bevTreeEditor = function() {
 		for (i = 0; i < 100 ; ++i)
-			nodePool.push(new Node(i,'Composite'));
+			nodePool.push(new NodeContainer(i,'Composite'));
 		
 		let top = $('<div/>').css({'width':'100%','height':'320px','float':'left'});
 		let other = $('<div/>').css({'width':'10%','height':'150%','float':'left'});
-		let panel = $('<div/>').css({'width':'60%','height':'150%','float':'left'});
+		
 		let manual = $('<div/>').css({'width':'30%','height':'150%', 'float':'left',});
 		$(this).append(top);
 		$(this).append(other);
-		$(this).append(panel);
+		$(this).append(panel.UI.element);
 		$(this).append(manual);
 		for (x in nodePool)
-			panel.append(nodePool[x].UI.element);
+			panel.UI.element.append(nodePool[x].UI.element);
 	}
 })(jQuery);
 
